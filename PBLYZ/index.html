@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"/>
+		<meta charset="utf-8">
+		<title>彭勃留言站</title>
+		<link rel="stylesheet" type="text/css" href="css/style.css"/>
+		<script src="scripts/vue.min.js"></script>
+		<script src="scripts/jquery.js"></script>
+		<script src="scripts/tools.js"></script>
+		<script src="scripts/topic.js"></script>
+		<script src="scripts/reply.js"></script>
+		<script src="scripts/post.js"></script>
+		<script src="scripts/message.js"></script>
+		<script src="scripts/search.js"></script>
+		<script src="scripts/result.js"></script>
+		<script src="scripts/login.js"></script>
+		<script src="scripts/register.js"></script>
+	</head>
+	<body>
+		<div id="app" v-cloak>
+			<h1>欢迎来到彭勃留言站</h1>
+			<!-- 导航栏 -->
+			<div id="linksBar">
+				<span @click="turnToMain"><img src="images/shouye.png"/>首页</span>
+				<span @click="wantToLeave"><img src="images/liuyan.png"/>留言</span>
+				<span @click="turnToPage('查询')"><img src="images/chaxun.png"/>查询</span>
+				<!-- 根据登录名决定：显示登录按钮还是滚动欢迎信息 -->
+				<span v-if="userName.trim() == ''" @click="turnToPage('登录')">
+					<img src="images/login.png"/>登录
+				</span>
+				<span class="hello" style="color: #FF0000;" v-else>{{ hello }}</span>
+				<!-- 根据登录名判断是否显示注销按钮 -->
+				<span v-if="userName.trim() != ''" @click="clickLogout">
+					<img src="images/logout.jpg"/>注销
+				</span>
+			</div>
+			<!-- 页面主体 -->
+			<div id="mainBody" class="mainBody">
+				<!-- 根据page属性显示不同的页面 -->
+				<div v-if="page == '首页'">
+					<!-- 产生多个“主题”组件 -->
+					<template v-for="topic in topics">
+						<topics-one :topic="topic" 
+							:visitor="userName" 
+							@click="clickATopic(topic.topicId, topic.title)"
+							@recommended="recommended"
+							@delete_topic="deleteTopic" />
+					</template>
+				</div>
+				<div v-else-if="page == '详情'">
+					<!-- 返回首页的图标 -->
+					<div class="backToMain" @click="backToMain(selectedTopic.topicId)">
+						<img src="images/back.png"/>
+					</div>
+					<!-- 显示该主题贴子数量 -->
+					<span class="postsNum">共{{ selectedTopic.posts.length }}贴</span>
+					<!-- 主题标题 -->
+					<h2>主题： {{ selectedTopic.title }}</h2>
+					<!-- 产生多个“贴子”组件 -->
+					<template v-for="post in selectedTopic.posts">
+						<posts-one :topic_id="parseInt(selectedTopic.topicId)" 
+							:post="post" 
+							:visitor_id="userId" 
+							@replied="repliedPost"
+							@deleted_post="deletedPost" 
+							@deleted_reply="deletedReply"
+							@delete_first_post="deleteTopic" />
+					</template>
+					<!-- 回贴文本框和按钮 -->
+					<div class="publishPost">
+						<input type="button" 
+							value="发表" 
+							:disabled="userName==''" 
+							@click="leavePost" />
+						<textarea rows="2" 
+							v-model="newPost"
+							:placeholder="userId<0?'请登录后再发贴':'请在此处输入您的回贴'"
+							:disabled="userId<0"></textarea>
+					</div>
+				</div>
+				<div v-else-if="page == '留言'">
+					<!-- “发表主题”组件 -->
+					<leave-message :uid="userId" @click="backToMain"></leave-message>
+				</div>
+				<div v-else-if="page == '查询'">
+					<!-- “搜索栏”组件 -->
+					<search-bar @click="showSearch"></search-bar>
+					<!-- 显示搜索结果数量 -->
+					<div class="searchesNum" v-if="searchResults.length>0 || isSearched">
+						共{{ searchResults.length }}个结果
+					</div>
+					<!-- 多个“搜索结果贴”组件 -->
+					<template v-for="post in searchResults">
+						<results-one :result-post="post" 
+							@click="clickSearchResult" />
+					</template>
+				</div>
+				<div v-else-if="page == '登录'">
+					<!-- “登录框”组件 -->
+					<login-user @login="clickLogin" @register="clickRegister"></login-user>
+				</div>
+				<div v-else-if="page == '注册'">
+					<!-- “注册会员框”组件 -->
+					<register-user @click="confirmRegister"></register-user>
+				</div>
+				<div v-else>
+					<h1>未知错误！请联系管理员！</h1>
+				</div>
+			</div>
+			<div id="footer">&copy;设计者：彭勃&nbsp;&nbsp;永城职业学院电子信息工程系</div>
+		</div>
+		<script>
+			var app = new Vue({
+				el: '#app',
+				data: {
+					userId: -1,			//已登录会员id
+					userName: "",		//已登录会员名
+					hello: "",			//欢迎信息
+					page: "首页",		//当前显示哪一页
+					helloTimer: null,	//滚动欢迎信息定时器
+					refreshTimer: null,	//刷新页面信息定时器
+					topics: [],			//首页主题数组
+					selectedTopic: null,	//"详情"页面某主题及所有贴
+					newPost: "",		//待发表的新贴
+					isSearched: false,	//决定是否显示“搜索到多少个结果”
+					searchResults: []	//搜索结果数组
+				},
+				methods: {
+					// 滚动欢迎信息
+					scrollHello: function () {
+						this.hello =  this.hello.substring(1, this.hello.length) + this.hello.substring(0, 1); 
+					},
+					// 切换页面,并清空搜索结果,回到页面上方
+					turnToPage: function (page) {
+						this.page = page.trim();
+						this.searchResults = [];
+						this.isSearched = false;
+						document.getElementById("mainBody").scrollTop = 0;
+					},
+					// 切换到首页，清空详情页面所有贴，重新读取所有主题
+					turnToMain: function () {
+						this.selectedTopic = null;
+						this.getMessages();
+						this.turnToPage('首页');
+					},
+					// 在首页重新读取所有主题
+					getMessages: function () {
+						var that = this;
+						$.getJSON('php/GetMessages.php', function(jsonData) {
+							if (jsonData.RESULT == "T") {
+								that.topics = [];
+								that.topics = jsonData.Topics;
+							} else {
+								console.log(jsonData.MSG);
+								alert("读取留言失败！请联系管理员！");
+							}
+						});
+					},
+					// 跳转到详情页面,显示某主题所有贴,如第三个参数为true则只刷新不跳转
+					clickATopic: function (topicId, title, refresh) {
+						var that = this;
+						$.ajax({
+							url: 'php/GetPosts.php',
+							type: 'post',
+							data: JSON.stringify({"TopicId": topicId, 
+								"TopicTitle": title,
+								"VisitorId": that.userId
+							}),
+							success: function(data) {
+								var jsonData = JSON.parse(data);
+								if (jsonData.RESULT == "T") {
+									that.selectedTopic = jsonData.SelectedTopic;
+									if (!refresh) {
+										that.turnToPage("详情");
+									}
+								} else {
+									console.log(jsonData.MSG);
+									alert("读取贴子失败！请联系管理员！");
+								}
+							}
+						});
+					},
+					// 从详情页面返回首页，向下滚动到之前访问的主题
+					backToMain: function (topicId) {
+						this.turnToMain();
+						Vue.nextTick(function () {
+							setTimeout(function () {
+								document.getElementById("topic"+topicId).scrollIntoView();
+							}, 300);
+						});
+					},
+					// 切换到留言页面,如果没有登录会弹出要求登录的提示框
+					wantToLeave: function () {
+						if (this.userName == "") {
+							if (confirm("登录后才能留言！现在登录吗？")) {
+								this.turnToPage('登录');
+							} else {
+								return;
+							}
+						} else {
+							this.turnToPage('留言');
+						}
+					},
+					// 对详情页面的某主题发表回贴，并向下滚动到新发表的回贴
+					leavePost: function () {
+						var topicId = this.selectedTopic.topicId;
+						var title = this.selectedTopic.title;
+						var that = this;
+						$.ajax({
+							url: 'php/LeavePost.php',
+							type: 'post',
+							data: JSON.stringify({"TopicId": topicId, 
+								"UserId": that.userId,
+								"Content": that.newPost
+							}, null, 4),
+							success: function(data) {
+								var jsonData = JSON.parse(data);
+								if (jsonData.RESULT == "T") {
+									that.clickATopic(topicId, title);
+									Vue.nextTick(function () {
+										setTimeout(function () {
+											document.getElementById("post"+jsonData.PostId).scrollIntoView();
+										}, 300);
+									});
+								} else {
+									console.log(jsonData.MSG);
+									alert("发表贴子失败！请联系管理员！");
+								}
+								that.newPost = "";
+							}
+						});
+					},
+					// 对某贴进行回复(不同于回贴)后，向下滚动到该回复
+					repliedPost: function (replyId) {
+						this.clickATopic(this.selectedTopic.topicId, this.selectedTopic.title);
+						Vue.nextTick(function () {
+							setTimeout(function () {
+								document.getElementById("reply"+replyId).scrollIntoView();
+							}, 300);
+						});
+					},
+					// 删除贴子,并刷新详情页面
+					deletedPost: function () {
+						this.clickATopic(this.selectedTopic.topicId, this.selectedTopic.title);
+					},
+					// 删除回复,并滚动到被删除回复所在贴子
+					deletedReply: function (postId) {
+						this.clickATopic(this.selectedTopic.topicId, this.selectedTopic.title);
+						Vue.nextTick(function () {
+							setTimeout(function () {
+								document.getElementById("post"+postId).scrollIntoView();
+							}, 300);
+						});
+					},
+					// 删除某主题和其所有贴,跳转到首页
+					deleteTopic: function (topicId) {
+						var that = this;
+						$.ajax({
+							url: 'php/DeleteTopic.php',
+							type: 'post',
+							data: JSON.stringify({"TopicId": topicId}),
+							success: function(data) {
+								var jsonData = JSON.parse(data);
+								if (jsonData.RESULT == "T") {
+									that.turnToMain();
+								} else {
+									console.log(jsonData.MSG);
+									alert("删除主题失败！请联系管理员！");
+								}
+							}
+						});
+					},
+					// 加精后刷新首页
+					recommended: function (topicId) {
+						this.getMessages();
+					},
+					// 显示搜索结果
+					showSearch: function (searchResults) {
+						this.searchResults = searchResults;
+						this.isSearched = true;
+					},
+					// 点击搜索结果某贴,跳转到详情页面并向下滚动到该贴
+					clickSearchResult: function (topicId, title, postId) {
+						this.clickATopic(topicId, title);
+						Vue.nextTick(function () {
+							setTimeout(function () {
+								document.getElementById("post"+postId).scrollIntoView();
+							}, 300);
+						});
+					},
+					// 登录后读取登录信息,跳转回首页
+					clickLogin: function (id, loginName) {
+						this.userId = id;
+						this.userName = loginName;
+						this.turnToMain();
+					},
+					// 点击"注册新用户"后的跳转
+					clickRegister: function () {
+						this.turnToPage('注册');
+					},
+					// 注销，跳转回首页
+					clickLogout: function () {
+						this.userId = -1;
+						this.userName = "";
+						this.turnToMain();
+					},
+					// 完成注册后登录,跳转回首页
+					confirmRegister: function (id, name) {
+						this.userId = id;
+						this.userName = name;
+						this.turnToMain();
+					},
+					// 如果在首页,判断有没有新主题,刷新所有主题信息;
+					// 如果在详情页面,刷新该主题所有贴,如果主题被删除跳转回首页
+					refreshMessage: function () {
+						if (this.page == "首页") {
+							if (this.topics.length == 0) {
+								this.getMessages();
+							} else {
+								var topicsNum = this.topics.length;
+								var latestReplyTime = this.topics[0].replyTime;
+								var that = this;
+								$.ajax({
+									url: 'php/CheckNewTopic.php',
+									type: 'post',
+									data: JSON.stringify({"TopicsNum": topicsNum, 
+										"ReplyTime": latestReplyTime
+									}),
+									success: function(data) {
+										var jsonData = JSON.parse(data);
+										if (jsonData.RESULT == "T") {
+											that.getMessages();
+										}
+									}
+								});
+							}
+						} else if (this.page == "详情") {
+							this.clickATopic(this.selectedTopic.topicId, this.selectedTopic.title, true);
+							if (this.selectedTopic.posts.length == 0) {
+								alert("此主题已经被删除，现在将跳转回首页！");
+								this.turnToMain();
+							}
+						}
+					}
+				},
+				// 当页面刚创建时设置定时器,并显示首页所有主题
+				mounted:function() {
+					this.helloTimer = setInterval(this.scrollHello, 400);
+					this.refreshTimer = setInterval(this.refreshMessage, 5000);
+					this.getMessages();
+				},
+				// 当页面销毁时取消所有定时器
+				beforeDestroy:function(){
+					clearInterval(this.helloTimer);
+					clearInterval(this.refreshTimer);
+				},
+				// 监听登录会员名,设置欢迎信息
+				watch: {
+					userName: function () {
+						if (this.userName != "") {
+							this.hello = "欢迎你回来，" + this.userName + "！";
+						}
+					}
+				}
+			})
+		</script>
+	</body>
+</html>

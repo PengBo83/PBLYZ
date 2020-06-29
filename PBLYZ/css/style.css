@@ -1,0 +1,309 @@
+/* 使页面加载或刷新时不显示{{ }} */
+[v-cloak]{
+	display: none;
+}
+/* 页面所有元素样式 */
+* {
+	margin-top: 0;
+	margin-left: 0;
+	cursor: pointer;
+}
+/* html元素样式 */
+html {
+	height: 100%;
+}
+/* body元素样式，使页面居中并设置最大宽度 */
+body {
+	height: 100%;
+	max-width: 720px;
+	margin: 0 auto;
+	font: normal 100% 微软雅黑,arial;
+	font-size: 1.4rem;
+	color: #000000;
+}
+/* vue挂载元素样式,设置背景图片 */
+body #app {
+	height: 100%;
+	background: url(../images/background.jpg) no-repeat;
+	background-size: cover;
+}
+/* 页面主标题"XX留言站"样式 */
+#app h1 {
+	height: 5%;
+	color: #00FF7F;
+}
+/* 导航栏样式 */
+#linksBar {
+	height: 3%;
+}
+/* 导航栏每一项样式 */
+#linksBar span{
+	float: left;
+	margin-right: 1rem;
+	color: #0000FF;
+}
+/* 欢迎信息样式,设置不换行和超出隐藏 */
+.hello {
+	max-width: 30%;
+	white-space: nowrap;
+	overflow: hidden;
+	padding-top: 0.2rem;
+	font-size: 1.2rem;
+}
+/* 页脚版权信息样式 */
+#footer {
+	height: 2%;
+	font-size: 1rem;
+	color: #DCDCDC;
+	text-align: center;
+}
+/* 页面主体样式,设置了垂直滚动条 */
+.mainBody {
+	clear: both;
+	height: 85%;
+	padding-top: 0.5rem;
+	overflow: auto;
+}
+/* "说话"框边框样式 */
+.messageBorder {
+	border:  2rem solid #41A74A;
+	border-image: url(../images/message_left.png) 27 round stretch;
+}
+/* 主题组件内容样式 */
+.topicBody {
+	overflow:hidden;
+	background-color: #DCDCDC;
+	padding: 0;
+}
+/* 主题组件标题样式 */
+.topicBody h2 {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+/* 主题组件内容样式,设置超过3行隐藏 */
+.topicBody p {
+	word-break:break-all;
+	display:-webkit-box;
+	-webkit-box-orient:vertical;
+	-webkit-line-clamp:3;
+	overflow:hidden;
+}
+/* 主题组件时间栏样式 */
+.topicTime {
+	margin: 0 1rem 0 2rem;
+	text-align: center;
+	background-color: #41A74A;
+	font-size: 0.8rem;
+	color: #DCDCDC;
+}
+/* 详情页面"返回首页"图片样式 */
+.backToMain {
+	float: left;
+	margin: 0.5rem 0.5rem 0;
+	color: #0000FF;
+}
+/* 详情页面"贴子数量"样式 */
+.postsNum {
+	font-size: 1rem;
+	color: #DCDCDC;
+	float: right;
+	margin: 1rem 0.5rem 0 0.5rem;
+}
+/* 贴子组件内容样式 */
+.postBody {
+	background-color: #DCDCDC;
+	padding: 0;
+}
+/* 贴子组件时间栏样式 */
+.postTime {
+	margin: 0 1rem 0 2rem;
+	text-align: right;
+	background-color: #41A74A;
+	font-size: 0.8rem;
+	color: #DCDCDC;
+}
+/* 点赞后"赞"图片样式 */
+.bePraised {
+	border: 0.1rem solid #FF0000;
+}
+/* "所有回复"表格样式 */
+.replies {
+	width: 90%;
+	float: right;
+	margin: 1%;
+	table-layout: fixed;
+	border: solid #41A74A;
+	border-width: 0.1rem 0 0 0.1rem;
+	font-size: 1rem;
+}
+/* "所有回复"中每一回复样式 */
+.replies td {
+	border: solid #41A74A;
+	border-width: 0 0.1rem 0.1rem 0;
+	background-color: #DCDCDC;
+}
+/* 发表回贴的文本框 */
+.publishPost textarea {
+	width: 60%;
+	float: right;
+	font-size: 1.4rem;
+	border-radius: 0.5rem;
+	word-break: break-all;
+}
+/* 发表回贴的按钮 */
+.publishPost input {
+	width: 12%;
+	float: right;
+	margin: auto 2%;
+	font-size: 1.8rem;
+	background-color: #0000FF;
+	color: #FFFFFF;
+	font-weight: bold;
+	border-radius: 0.5rem;
+}
+/* 发表回复的文本框 */
+.publishReply textarea {
+	width: 80%;
+	font-size: 1.4rem;
+	border-radius: 0.5rem;
+	word-break: break-all;
+	vertical-align: middle;
+}
+/* 发表回复的按钮 */
+.publishReply input {
+	width: 12%;
+	margin: 0 2%;
+	font-size: 1.2rem;
+	color: #41A74A;
+	border-color: #41A74A;
+	border-radius: 0.5rem;
+	vertical-align: middle;
+}
+/* "发表主题"组件表格样式 */
+.leaveMessage {
+	width: 80%;
+	margin: auto;
+	background-color: #FFFFFF;
+	border: 0.1rem solid;
+	border-radius: 0.5rem;
+}
+/* "发表主题"组件标签样式 */
+.leaveMessage label {
+	color: #0000FF;
+}
+/* "发表主题"组件单行文本框和多行文本框样式 */
+.leaveMessage input[type=text], .leaveMessage textarea {
+	width: 90%;
+	font-size: 1.4rem;
+	word-break: break-all;
+	border-radius: 0.5rem;
+}
+/* "发表主题"组件按钮样式 */
+.leaveMessage input[type=button] {
+	color: #0000FF;
+	font-size: 1.4rem;
+	border-radius: 0.5rem;
+}
+/* "搜索栏"组件标签样式 */
+.searchBar label {
+	color: #0000FF;
+	margin-left: 2%;
+}
+/* "搜索栏"组件下列列表框样式 */
+.searchBar select {
+	font-size: 0.8rem;
+	border-radius: 0.5rem;
+}
+/* "搜索栏"组件文本框样式 */
+.searchBar input[type=text] {
+	width: 30%;
+	font-size: 1rem;
+	border-radius: 0.5rem;
+}
+/* "搜索栏"组件按钮样式 */
+.searchBar input[type=button] {
+	color: #0000FF;
+	font-weight: bold;
+	font-size: 1rem;
+	border-radius: 0.5rem;
+}
+/* "搜索结果有多少"文字样式 */
+.searchesNum {
+	font-size: 1rem;
+	color: #DCDCDC;
+	margin: 0 2%;
+}
+/* "登录框"组件表格样式 */
+.loginBox {
+	width: 60%;
+	margin: auto;
+	background-color: #FFFFFF;
+	border: 0.1rem solid;
+	border-radius: 0.5rem;
+}
+/* "登录框"组件标签样式 */
+.loginBox label {
+	color: #0000FF;
+}
+/* "登录框"组件"忘记密码"和"注册新用户"样式 */
+.loginBox span {
+	font-size: 1rem;
+	color: #0000FF;
+	text-decoration: underline;
+}
+/* "登录框"组件文本框和密码框样式 */
+.loginBox input[type=text], .loginBox input[type=password] {
+	width: 80%;
+	font-size: 1.4rem;
+	border-radius: 0.5rem;
+}
+/* "登录框"组件按钮样式 */
+.loginBox input[type=button] {
+	color: #0000FF;
+	font-size: 1.4rem;
+	border-radius: 0.5rem;
+}
+/* "注册框"组件表格样式 */
+.registerBox {
+	width: 80%;
+	margin: auto;
+	background-color: #FFFFFF;
+	border: 0.1rem solid;
+	border-radius: 0.5rem;
+}
+/* "注册框"组件所有输入控件共通样式 */
+.registerBox input[type=text], .registerBox input[type=password], .registerBox select, .registerBox input[type=button] {
+	width: 90%;
+	font-size: 1.2rem;
+	margin-left: 5%;
+	border-radius: 0.5rem;
+}
+/* "注册框"组件性别单选按钮样式 */
+.registerBox input[type=radio] {
+	margin-left: 5%;
+}
+/* "注册框"组件按钮样式 */
+.registerBox input[type=button] {
+	color: #0000FF;
+}
+/* "注册框"组件标签样式 */
+.registerBox label {
+	color: #0000FF;
+}
+/* "注册框"组件所有图标样式 */
+.registerBox img {
+	float: left;
+}
+/* "注册框"组件所有验证文字样式 */
+.registerBox span {
+	font-size: 1rem;
+	color: #FF0000;
+	float: left;
+	margin-left: 5%;
+	width: 80%;
+}
+/* "注册框"组件头像图片样式 */
+.registerImage {
+	width: 50%;
+}
